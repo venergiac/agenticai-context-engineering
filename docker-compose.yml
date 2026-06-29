@@ -13,17 +13,6 @@ services:
       OLLAMA_NO_CLOUD: "1"
     restart: unless-stopped
 
-  langfuse:
-    image: langfuse/langfuse:latest
-    container_name: langfuse
-    ports:
-      - "8080:8080"
-    environment:
-      LANGFUSE_BASE_URL: "http://localhost:8080"
-      LANGFUSE_PUBLIC_KEY: "local_public_key"
-      LANGFUSE_SECRET_KEY: "local_secret_key"
-      LANGFUSE_TRACING_ENABLED: "true"
-    restart: unless-stopped
-
 volumes:
   ollama_models:
+    driver: local

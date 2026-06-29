@@ -39,7 +39,11 @@ python app.py --version b --prompt "Write a short product description for a sola
 
 If using a custom local Ollama model, pass `--model`.
 
-## Langfuse
+## Langfuse [OPTIONAL]
+
+If you want to use LangFuse locally you can use docker compose to install it.
+
+See https://langfuse.com/self-hosting/deployment/docker-compose to install local langfuse.
 
 Set Langfuse environment variables before running the app:
 
@@ -51,12 +55,15 @@ set LANGFUSE_SECRET_KEY=local_secret_key
 
 If you want to use a local Langfuse service with Docker Compose, update `docker-compose.yml` and set `LANGFUSE_BASE_URL` to `http://localhost:8080`.
 
+
+
 ## Docker Compose
 
 Bring up the services:
 
 ```powershell
 docker compose up -d
+docker compose exec ollama ollama pull qwen2.5:7b-instruct
 ```
 
 > Note: This workspace currently cannot verify Docker Compose execution because the Docker daemon is unavailable in this session.
