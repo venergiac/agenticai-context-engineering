@@ -19,6 +19,7 @@ import tiktoken
 from langgraph.graph import START, StateGraph
 from ollama import Client
 from typing_extensions import TypedDict
+from llmlingua.prompt_compressor import PromptCompressor
 
 
 def _is_langfuse_enabled() -> bool:
@@ -41,12 +42,12 @@ else:
     get_client = None  # type: ignore[assignment]
     observe = _noop_observe
 
-PromptCompressor = None  # type: ignore[misc]
 LLMLINGUA_AVAILABLE = False
 
 
 class AppState(TypedDict, total=False):
     user_prompt: str
+    context: str
     model: str
     compressed_prompt: str
     direct_response: str
@@ -66,10 +67,12 @@ def token_count(text: str) -> int:
 
 
 def call_ollama(prompt: str, model: str = "qwen2.5:7b-instruct") -> str:
+    print(f"🚀calling ollama {prompt} ...")
     response = OLLAMA_CLIENT.generate(model=model, prompt=prompt)
     message = response.get("response", "")
     if not isinstance(message, str):
         raise RuntimeError(f"Unexpected Ollama response format: {response}")
+    print("✅...ollama response received.")
     return message.strip()
 
 
@@ -93,7 +96,9 @@ def compare_results(state: AppState, config=None) -> Dict[str, Any]:
 
 @observe(name="ollama_direct_generation", as_type="generation")
 def direct_agent(state: AppState, config=None) -> Dict[str, Any]:
-    prompt = state.get("user_prompt", "")
+    user_prompt = state.get("user_prompt", "")
+    context = state.get("context", "")
+    prompt = "CONTEXT: " + context + "\nUSER: " + user_prompt
     direct_tokens = token_count(prompt)
     model = state.get("model") or (
         (config or {}).get("configurable", {}).get("model")
@@ -110,7 +115,9 @@ def direct_agent(state: AppState, config=None) -> Dict[str, Any]:
 
 @observe(name="ollama_compressed_generation", as_type="generation")
 def compressed_agent(state: AppState, config=None) -> Dict[str, Any]:
-    prompt = state.get("compressed_prompt", state.get("user_prompt", ""))
+    user_prompt = state.get("compressed_prompt", "")
+    context = state.get("context", "")
+    prompt = "CONTEXT: " + context + "\nUSER: " + user_prompt
     model = state.get("model") or (
         (config or {}).get("configurable", {}).get("model")
         if config
@@ -139,11 +146,13 @@ def make_compression_node(
         @observe(name="llmlingua_compression", as_type="span")
         def llmlingua_compression(state: AppState, config=None) -> Dict[str, Any]:
             prompt = state.get("user_prompt", "")
+            context = state.get("context", "")
             if compressor is None:
                 raise RuntimeError("LLMLingua compressor was not initialized.")
 
             compressed = compressor.compress_prompt(
                 [prompt],
+                context=context,
                 instruction="Compress this prompt for faster generation.",
                 question="",
                 rate=rate,
@@ -155,16 +164,16 @@ def make_compression_node(
             }
 
         return llmlingua_compression
+    else:
+        @observe(name="identity_compression", as_type="span")
+        def identity_compression(state: AppState, config=None) -> Dict[str, Any]:
+            prompt = state.get("user_prompt", "")
+            return {
+                "compressed_prompt": prompt,
+                "compressed_tokens": token_count(prompt),
+            }
 
-    @observe(name="identity_compression", as_type="span")
-    def identity_compression(state: AppState, config=None) -> Dict[str, Any]:
-        prompt = state.get("user_prompt", "")
-        return {
-            "compressed_prompt": prompt,
-            "compressed_tokens": token_count(prompt),
-        }
-
-    return identity_compression
+        return identity_compression
 
 
 def build_graph(
@@ -204,18 +213,7 @@ def initialize_llmlingua(
     device_map: str = "cpu",
     use_llmlingua2: bool = False,
 ) -> Any:
-    global LLMLINGUA_AVAILABLE, PromptCompressor
-
-    if not LLMLINGUA_AVAILABLE:
-        try:
-            module = importlib.import_module("llmlingua.prompt_compressor")
-            PromptCompressor = module.PromptCompressor
-            LLMLINGUA_AVAILABLE = True
-        except ImportError as exc:  # pragma: no cover
-            raise RuntimeError(
-                "LLMLingua is not installed in the current environment."
-            ) from exc
-
+    LLMLINGUA_AVAILABLE = True
     return PromptCompressor(
         model_name=model_name,
         device_map=device_map,
@@ -248,14 +246,19 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--version",
-        choices=["a", "b"],
-        default="a",
-        help="Use version 'a' for direct Ollama or 'b' for LLMLingua compression.",
+        choices=["direct", "llmlingua"],
+        default="direct",
+        help="Use version 'direct' for direct Ollama or 'llmlingua' for LLMLingua compression.",
     )
     parser.add_argument(
         "--prompt",
         required=True,
         help="The user prompt to send to the agent graph.",
+    )
+    parser.add_argument(
+        "--context",
+        required=True,
+        help="The context to send to the agent graph.",
     )
     parser.add_argument(
         "--model",
@@ -290,7 +293,7 @@ def main() -> int:
     args = parse_args()
     configure_langfuse()
 
-    if args.version == "b":
+    if args.version == "llmlingua":
         compressor = initialize_llmlingua(
             model_name=args.llmlingua_model,
             device_map=args.llmlingua_device,
@@ -305,7 +308,9 @@ def main() -> int:
         graph = build_graph(use_llmlingua=False)
 
     result = graph.invoke(
-        {"user_prompt": args.prompt, "model": args.model},
+        {"user_prompt": args.prompt, 
+         "context": args.context, 
+         "model": args.model},
         config={"configurable": {"model": args.model}},
     )
     print(json.dumps(result, indent=2, ensure_ascii=False))

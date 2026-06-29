@@ -23,18 +23,40 @@ This sample project shows two graph versions:
 
 3. Ensure Ollama CLI is installed and the Docker daemon is running if using `docker compose`.
 
-## Run
+## Docker Compose
 
-Version A (direct Ollama):
+Bring up the services:
 
 ```powershell
-python app.py --version a --prompt "Write a short product description for a solar-powered backpack."
+docker compose up -d
+docker compose exec ollama ollama pull qwen2.5:7b-instruct
 ```
 
-Version B (LLMLingua compression):
+## Run
 
 ```powershell
-python app.py --version b --prompt "Write a short product description for a solar-powered backpack."
+python app.py --version llmlingua --prompt "What are the three pillars of Physical AI mentioned in the text, and why is the Sim-to-Real approach necessary?" --context "For decades, artificial intelligence has lived confined within screens, cloud servers, and digital software. 
+Language models process words and image generators manipulate pixels at extraordinary speeds, but they lack direct 
+interaction with the tangible world. Today, we are witnessing the most crucial technological transition of the century: 
+the birth of Physical AI. This discipline represents the definitive convergence of advanced computational intelligence 
+and the material world, enabling artificial systems to perceive, understand, move, and act autonomously within 
+three-dimensional physical space.
+
+Unlike purely digital AI, Physical AI must contend with the immutable laws of physics: gravity, friction, inertia, 
+fluid dynamics, and the sheer unpredictability of unstructured environments. It is not simply a matter of installing 
+smart software into an old industrial robot. Physical AI requires a holistic design where hardware (biomimetic sensors, 
+high-precision actuators, compliant materials) and software (multimodal neural networks, reinforcement learning, 
+physics-aware simulations) evolve and operate together as a single organism.
+
+The foundational pillars of Physical AI include:
+1. Advanced Multimodal Perception: Systems fuse data from LiDAR, tactile sensors simulating human skin, pressure sensors, and inertial units.
+2. Simulation-to-Real Evolution (Sim-to-Real): Training a robot in the real world is expensive and dangerous. Engineers leverage hyper-realistic digital simulations to let the AI attempt tasks millions of times in seconds, then transfer this intelligence into the physical robot.
+3. Physical Commonsense Reasoning: A physical AI must grasp real-world cause and effect (e.g., understanding that a glass vase will shatter if dropped).
+
+The application fields are vast: humanoid robotics, domestic assistants, smart prosthetics, micro-robotic surgery, Level 5 autonomous driving, and construction automation.
+However, massive challenges remain: safety engineering, ethical alignment, and energy efficiency bottlenecks tied to local Edge Computing. 
+Despite these hurdles, Physical AI marks the end of AI as a mere 'text oracle' and ushers in the era of machines capable of tangibly reshaping reality.
+"
 ```
 
 If using a custom local Ollama model, pass `--model`.
@@ -57,16 +79,8 @@ If you want to use a local Langfuse service with Docker Compose, update `docker-
 
 
 
-## Docker Compose
 
-Bring up the services:
 
-```powershell
-docker compose up -d
-docker compose exec ollama ollama pull qwen2.5:7b-instruct
-```
-
-> Note: This workspace currently cannot verify Docker Compose execution because the Docker daemon is unavailable in this session.
 
 ## Notes
 
