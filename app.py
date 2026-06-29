@@ -151,10 +151,9 @@ def make_compression_node(
                 raise RuntimeError("LLMLingua compressor was not initialized.")
 
             compressed = compressor.compress_prompt(
-                [prompt],
                 context=context,
                 instruction="Compress this prompt for faster generation.",
-                question="",
+                question=prompt,
                 rate=rate,
             )["compressed_prompt"]
 
