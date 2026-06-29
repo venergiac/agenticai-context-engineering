@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:rocm
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama/models
+    environment:
+      OLLAMA_HOST: "0.0.0.0:11434"
+      OLLAMA_NO_CLOUD: "1"
+    restart: unless-stopped
+
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: langfuse
+    ports:
+      - "8080:8080"
+    environment:
+      LANGFUSE_BASE_URL: "http://localhost:8080"
+      LANGFUSE_PUBLIC_KEY: "local_public_key"
+      LANGFUSE_SECRET_KEY: "local_secret_key"
+      LANGFUSE_TRACING_ENABLED: "true"
+    restart: unless-stopped
+
+volumes:
+  ollama_models:

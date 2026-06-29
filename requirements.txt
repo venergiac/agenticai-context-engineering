@@ -1,0 +1,6 @@
+langgraph==1.2.6
+langfuse==4.12.0
+llmlingua==0.2.2
+ollama>=0.2.0
+requests>=2.34.0
+tiktoken>=0.4.0
