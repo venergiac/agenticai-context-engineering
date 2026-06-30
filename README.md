@@ -78,10 +78,6 @@ set LANGFUSE_SECRET_KEY=local_secret_key
 If you want to use a local Langfuse service with Docker Compose, update `docker-compose.yml` and set `LANGFUSE_BASE_URL` to `http://localhost:8080`.
 
 
-
-
-
-
 ## Notes
 
 - The LLMLingua version uses `PromptCompressor` and may require a compatible Hugging Face model.
