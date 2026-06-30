@@ -27,14 +27,14 @@ This sample project shows two graph versions:
 
 Bring up the services:
 
-```powershell
+```
 docker compose up -d
 docker compose exec ollama ollama pull qwen2.5:7b-instruct
 ```
 
 ## Run
 
-```powershell
+```
 python app.py --version llmlingua --prompt "What are the three pillars of Physical AI mentioned in the text, and why is the Sim-to-Real approach necessary?" --context "For decades, artificial intelligence has lived confined within screens, cloud servers, and digital software. 
 Language models process words and image generators manipulate pixels at extraordinary speeds, but they lack direct 
 interaction with the tangible world. Today, we are witnessing the most crucial technological transition of the century: 
@@ -69,14 +69,21 @@ See https://langfuse.com/self-hosting/deployment/docker-compose to install local
 
 Set Langfuse environment variables before running the app:
 
-```powershell
+```
+set LANGFUSE_TRACING_ENABLED=true
 set LANGFUSE_BASE_URL=http://localhost:8080
 set LANGFUSE_PUBLIC_KEY=local_public_key
 set LANGFUSE_SECRET_KEY=local_secret_key
 ```
 
-If you want to use a local Langfuse service with Docker Compose, update `docker-compose.yml` and set `LANGFUSE_BASE_URL` to `http://localhost:8080`.
+Otherwise set remote [langfuse](https://langfuse.com/docs/observability/get-started), configure project and api key. 
 
+```
+LANGFUSE_TRACING_ENABLED=true
+LANGFUSE_SECRET_KEY = "sk-lf-..."
+LANGFUSE_PUBLIC_KEY = "pk-lf-..."
+LANGFUSE_BASE_URL = "https://cloud.langfuse.com"
+```
 
 ## Notes
 

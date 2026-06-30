@@ -23,11 +23,14 @@ from llmlingua.prompt_compressor import PromptCompressor
 
 
 def _is_langfuse_enabled() -> bool:
+
     if os.getenv("LANGFUSE_TRACING_ENABLED", "false").lower() not in {"1", "true", "yes", "on"}:
+        print(f"⚗️1. _is_langfuse_enabled={os.getenv('LANGFUSE_TRACING_ENABLED')}")
         return False
 
-    return bool(os.getenv("LANGFUSE_PUBLIC_KEY")) and bool(os.getenv("LANGFUSE_SECRET_KEY"))
-
+    ret = bool(os.getenv("LANGFUSE_PUBLIC_KEY")) and bool(os.getenv("LANGFUSE_SECRET_KEY"))
+    print(f"⚗️2. _is_langfuse_enabled={ret}")
+    return ret
 
 def _noop_observe(*args: Any, **kwargs: Any):
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -39,6 +42,7 @@ def _noop_observe(*args: Any, **kwargs: Any):
 if _is_langfuse_enabled():
     from langfuse import get_client, observe
 else:
+    print("3. _is_langfuse_enabled=false")
     get_client = None  # type: ignore[assignment]
     observe = _noop_observe
 
@@ -221,8 +225,6 @@ def initialize_llmlingua(
 
 
 def configure_langfuse() -> None:
-    os.environ.setdefault("LANGFUSE_TRACING_ENABLED", "false")
-
     if not _is_langfuse_enabled():
         return
 
@@ -236,7 +238,7 @@ def configure_langfuse() -> None:
 
         globals()["get_client"] = langfuse_get_client
 
-    get_client(public_key=public_key, secret_key=secret_key)
+    get_client()
 
 
 def parse_args() -> argparse.Namespace:
